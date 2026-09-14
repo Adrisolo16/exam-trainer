@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+data/bank.json
+data/tips/
+.venv/
+.vscode/
