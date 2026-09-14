@@ -7,6 +7,17 @@ The question bank is driven entirely by JSON files, so the same engine works for
 exam. The included sample set contains 130 original practice questions written for the
 AWS Cloud Practitioner domains.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Home](assets/screenshots/01-home.png) | ![Practice question](assets/screenshots/02-practice-question.png) |
+| *Exam builder: mode, topics and question count* | *A multiple-answer question in practice mode* |
+| ![Answer feedback](assets/screenshots/03-feedback.png) | ![Game Day](assets/screenshots/04-game-day-timed.png) |
+| *Instant feedback with explanation and hint* | *Game Day: timed, weighted by domain* |
+| ![Results](assets/screenshots/05-results.png) | ![Statistics](assets/screenshots/06-statistics.png) |
+| *Scaled score with breakdown by domain and topic* | *Progress across attempts* |
+
 ## Features
 
 - **Four study modes**
@@ -17,7 +28,7 @@ AWS Cloud Practitioner domains.
 - Single and multiple answer questions, auto-detected from the `Choose N` wording
 - Scaled scoring (100–1000) with a configurable pass threshold
 - Persistent progress stored per user in `%APPDATA%`, including per-question history
-- Statistics by exam domain and by chapter
+- Statistics by exam domain and by topic
 - Custom object-oriented widget components: scrollable containers, styled buttons,
   option rows, gradient-painted headers
 - Packs into a single portable Windows executable with PyInstaller

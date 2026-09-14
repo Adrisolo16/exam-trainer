@@ -365,7 +365,7 @@ class Trainer(tk.Tk):
         tk.Label(page, text="Arma tu examen", bg=C["bg"], fg=C["ink"],
                  font=("Segoe UI", 16, "bold")).pack(anchor="w")
         tk.Label(page, text=f"{len(self.bank)} preguntas en el banco  ·  "
-                            f"{len(set(q['chapter'] for q in self.bank))} capitulos",
+                            f"{len(set(q['chapter'] for q in self.bank))} temas",
                  bg=C["bg"], fg=C["ink_soft"], font=("Segoe UI", 10)).pack(anchor="w", pady=(2, 18))
 
         # --- modo
@@ -397,7 +397,7 @@ class Trainer(tk.Tk):
         self._pick_mode("practica")
 
         # --- alcance
-        tk.Label(page, text="2.  CAPITULOS", bg=C["bg"], fg=C["blue"],
+        tk.Label(page, text="2.  TEMAS", bg=C["bg"], fg=C["blue"],
                  font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 8))
 
         self.chap_vars = {}
@@ -497,20 +497,25 @@ class Trainer(tk.Tk):
         return pool
 
     def _refresh_count(self):
+        # Al volver al inicio, _pick_mode corre antes de que count_note se
+        # reconstruya: el atributo existe pero apunta a un widget destruido.
+        note = getattr(self, "count_note", None)
+        if note is None or not note.winfo_exists():
+            return
         mode = self.mode_var.get()
         pool = self._pool()
         if mode == "gameday":
-            self.count_note.configure(
+            note.configure(
                 text=f"GAME DAY ignora estos ajustes: siempre son {GAMEDAY_QUESTIONS} "
                      f"preguntas en {GAMEDAY_MINUTES} minutos, repartidas por los pesos "
                      f"oficiales de cada dominio.")
         elif mode == "errores":
-            self.count_note.configure(
+            note.configure(
                 text=f"Tenes {len(pool)} preguntas falladas disponibles."
                 if pool else "Todavia no has fallado ninguna pregunta. Hace un examen primero.")
         else:
             want = self.count_var.get() or len(pool)
-            self.count_note.configure(
+            note.configure(
                 text=f"Disponibles: {len(pool)}  ·  se usaran {min(want, len(pool))}")
 
     def _home_stats(self, page):
@@ -624,7 +629,7 @@ class Trainer(tk.Tk):
         chip(bar, DOMAIN_SHORT.get(q["domain"], q["domain"]),
              C["purple"], C["purple_soft"]).pack(side="left", padx=4)
         if s["mode"] != "gameday":
-            chip(bar, f"Cap {q['chapter']}", C["blue"], C["blue_soft"]).pack(side="left", padx=4)
+            chip(bar, f"Tema {q['chapter']}", C["blue"], C["blue_soft"]).pack(side="left", padx=4)
         if item["answer"] and len(item["answer"]) > 1:
             chip(bar, f"ELIGE {len(item['answer'])}", C["amber"], C["amber_soft"]).pack(side="left", padx=4)
 
@@ -785,7 +790,7 @@ class Trainer(tk.Tk):
                      wraplength=self.body.winfo_width() - 160).pack(fill="x", pady=(4, 0))
 
         tk.Label(self.fb_holder,
-                 text=f"Repasa el Capitulo {q['chapter']} - {q['chapter_title']}",
+                 text=f"Repasa el tema {q['chapter']} - {q['chapter_title']}",
                  bg=C["bg"], fg=C["ink_soft"], font=("Segoe UI", 9, "italic")
                  ).pack(anchor="w", pady=(8, 0))
 
@@ -909,8 +914,8 @@ class Trainer(tk.Tk):
 
         # desglose
         self._breakdown(page, "POR DOMINIO", lambda it: it["q"]["domain"])
-        self._breakdown(page, "POR CAPITULO",
-                        lambda it: f"Cap {it['q']['chapter']:>2} - {it['q']['chapter_title']}")
+        self._breakdown(page, "POR TEMA",
+                        lambda it: f"Tema {it['q']['chapter']:>2} - {it['q']['chapter_title']}")
 
         # fallos
         wrong = [it for it in s["items"] if it["picked"] != set(it["answer"])]
@@ -994,7 +999,7 @@ class Trainer(tk.Tk):
                      anchor="w", wraplength=self.body.winfo_width() - 140
                      ).pack(fill="x", pady=(6, 0))
 
-        tk.Label(inner, text=f"Capitulo {q['chapter']} - {q['chapter_title']}",
+        tk.Label(inner, text=f"Tema {q['chapter']} - {q['chapter_title']}",
                  bg=C["card"], fg=C["blue"], font=("Segoe UI", 8, "italic")
                  ).pack(anchor="w", pady=(6, 0))
 
@@ -1037,7 +1042,7 @@ class Trainer(tk.Tk):
             tk.Label(f, text=label, bg=C["card"], fg=C["ink_soft"],
                      font=("Segoe UI", 9)).pack(pady=(0, 14))
 
-        # dominio de cada capitulo
+        # dominio de cada tema
         qstats = self.progress["questions"]
         by_ch = {}
         for q in self.bank:
@@ -1049,7 +1054,7 @@ class Trainer(tk.Tk):
             b[1] += st["seen"]
 
         if by_ch:
-            tk.Label(page, text="DOMINIO POR CAPITULO", bg=C["bg"], fg=C["blue"],
+            tk.Label(page, text="DOMINIO POR TEMA", bg=C["bg"], fg=C["blue"],
                      font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 10))
             box = tk.Frame(page, bg=C["card"], highlightthickness=1,
                            highlightbackground=C["line"])
@@ -1063,6 +1068,10 @@ class Trainer(tk.Tk):
                 r.pack(fill="x", pady=3)
                 tk.Label(r, text=f"{ch:>2}. {title[:38]}", width=42, anchor="w",
                          bg=C["card"], fg=C["ink"], font=("Segoe UI", 9)).pack(side="left")
+                # el porcentaje se empaqueta antes que la barra: si va despues,
+                # el canvas con expand=True se come su espacio y el texto se corta
+                tk.Label(r, text=f"{pct*100:.0f}%", width=6, anchor="e", bg=C["card"],
+                         fg=C["ink_soft"], font=("Segoe UI", 9, "bold")).pack(side="right")
                 cv = tk.Canvas(r, height=16, bg=C["bg"], highlightthickness=0)
                 cv.pack(side="left", fill="x", expand=True, padx=10)
                 col = C["green"] if pct >= 0.8 else (C["amber"] if pct >= 0.6 else C["red"])
@@ -1070,8 +1079,6 @@ class Trainer(tk.Tk):
                     c.delete("b"),
                     c.create_rectangle(0, 0, max(2, e.width * p), 16, fill=col,
                                        width=0, tags="b")))
-                tk.Label(r, text=f"{pct*100:.0f}%", width=6, anchor="e", bg=C["card"],
-                         fg=C["ink_soft"], font=("Segoe UI", 9, "bold")).pack(side="left")
 
         # historial
         tk.Label(page, text="HISTORIAL", bg=C["bg"], fg=C["blue"],
